@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface DocumentHeaderProps {
   title: string
   onTitleChange: (title: string) => void

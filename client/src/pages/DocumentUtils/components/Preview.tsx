@@ -1,4 +1,3 @@
-import React from 'react'
 import { md } from '../config/editorConfig'
 
 interface PreviewProps {
