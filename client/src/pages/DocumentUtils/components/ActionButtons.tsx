@@ -1,9 +1,10 @@
 interface ActionButtonsProps {
   onBackHome: () => void
   onDownload: () => void
+  onShare: () => void
 }
 
-export default function ActionButtons({ onBackHome, onDownload }: ActionButtonsProps) {
+export default function ActionButtons({ onBackHome, onDownload, onShare }: ActionButtonsProps) {
   return (
     <div style={{ display: 'flex', borderTop: '1px solid #e0e0e0', flexShrink: 0 }}>
       <button 
@@ -34,6 +35,22 @@ export default function ActionButtons({ onBackHome, onDownload }: ActionButtonsP
         }}
       >
         Download as MD
+      </button>
+
+    <button
+        onClick={onShare}
+        style={{
+          flex: 1,
+          padding: '12px 24px',
+          cursor: 'pointer',
+          border: 'none',
+          background: '#6c757d',
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}
+      >
+        Share Document
       </button>
     </div>
   )

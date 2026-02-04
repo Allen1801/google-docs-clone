@@ -42,6 +42,20 @@ export default function DocumentPage() {
     navigate('/')
   }, [navigate])
 
+  const handleShare = useCallback(async () => {
+    if (!id) return
+
+    const shareLink = `${window.location.origin}/document/${id}`
+
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      alert('Document link copied to clipboard')
+    } catch (err) {
+      console.error('Failed to copy link', err)
+    }
+  }, [id])
+
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, Arial', overflow: 'hidden' }}>
       
@@ -61,6 +75,7 @@ export default function DocumentPage() {
         <ActionButtons 
           onBackHome={handleBackHome}
           onDownload={handleDownload}
+          onShare={handleShare}
         />
       </div>
 
