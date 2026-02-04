@@ -1,9 +1,6 @@
 import { WebSocketServer } from 'ws'
 import { getRoom } from './roomManager.js'
 import { MESSAGE_TYPES } from './types.js'
-import { Node as ProseMirrorNode } from 'prosemirror-model'
-import { Step } from 'prosemirror-transform'
-import { schema as basicSchema } from 'prosemirror-schema-basic'
 
 const wss = new WebSocketServer({ port: 1234 })
 
