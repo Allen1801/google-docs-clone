@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react'
+import { ws, joinRoom } from '../../../websocket/socket'
+
 interface DocumentHeaderProps {
   title: string
   onTitleChange: (title: string) => void
@@ -5,12 +8,72 @@ interface DocumentHeaderProps {
 }
 
 export default function DocumentHeader({ title, onTitleChange, documentId }: DocumentHeaderProps) {
+  const localClientID = useRef(crypto.randomUUID())
+  const [localTitle, setLocalTitle] = useState(title)
+
+  // Sync prop -> local state
+  useEffect(() => {
+    console.log('[DocumentHeader] Prop title changed -> localTitle:', title)
+    setLocalTitle(title)
+  }, [title])
+
+  // Join room once
+  useEffect(() => {
+    if (!documentId) return
+    console.log('[DocumentHeader] Joining room:', documentId)
+    joinRoom(documentId)
+  }, [documentId])
+
+  // Handle incoming WS messages
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      const msg = JSON.parse(e.data)
+      console.log('[DocumentHeader] WS message received:', msg)
+
+      // INIT message
+      if (msg.type === 'init' && msg.roomId === documentId) {
+        const newTitle = msg.title ?? 'Untitled Document'
+        console.log('[DocumentHeader] INIT: setting title to', newTitle)
+        setLocalTitle(newTitle)
+        onTitleChange(newTitle)
+      }
+
+      // TITLE update from other clients
+      if (msg.type === 'title' && msg.clientID !== localClientID.current && msg.roomId === documentId) {
+        console.log('[DocumentHeader] TITLE update received:', msg.title)
+        setLocalTitle(msg.title)
+        onTitleChange(msg.title)
+      }
+    }
+
+    ws.addEventListener('message', handleMessage)
+    return () => ws.removeEventListener('message', handleMessage)
+  }, [documentId, onTitleChange])
+
+  // Handle local input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value
+    console.log('[DocumentHeader] Local input changed:', newTitle)
+    setLocalTitle(newTitle)
+    onTitleChange(newTitle)
+
+    if (!documentId) return
+
+    console.log('[DocumentHeader] Sending TITLE update:', newTitle)
+    ws.send(JSON.stringify({
+      type: 'title',
+      roomId: documentId,
+      clientID: localClientID.current,
+      title: newTitle
+    }))
+  }
+
   return (
     <header style={{ padding: '16px 24px', borderBottom: '1px solid #e0e0e0', flexShrink: 0 }}>
       <input
         type="text"
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
+        value={localTitle}
+        onChange={handleChange}
         style={{
           fontSize: 24,
           fontWeight: 'bold',

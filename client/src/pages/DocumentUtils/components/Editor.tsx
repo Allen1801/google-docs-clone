@@ -1,71 +1,109 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { EditorState } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
-import 'prosemirror-view/style/prosemirror.css'
 import { schema as basicSchema } from 'prosemirror-schema-basic'
 import { history } from 'prosemirror-history'
 import { keymap } from 'prosemirror-keymap'
+import { Node as ProseMirrorNode } from 'prosemirror-model'
+import { Step } from 'prosemirror-transform'
 import { customKeymap } from '../config/editorConfig'
 import { serializeNode } from '../utils/serializer'
+import { ws, joinRoom } from '../../../websocket/socket'
 
 interface EditorProps {
+  roomId: string
   onUpdate: (markdown: string) => void
   viewRef: React.MutableRefObject<EditorView | null>
 }
 
-export default function Editor({ onUpdate, viewRef }: EditorProps) {
-  const editorRef = useRef<HTMLDivElement | null>(null)
-  const onUpdateRef = useRef(onUpdate)
+export default function Editor({ roomId, onUpdate, viewRef }: EditorProps) {
+  const localClientID = useRef(crypto.randomUUID())
+  const pendingSteps = useRef<any[]>([])
+  const roomVersion = useRef(0)
 
-  // Keep the onUpdate ref current
+  const sendPendingSteps = () => {
+    if (!pendingSteps.current.length) return
+    const docJson = viewRef.current!.state.doc.toJSON()
+    ws.send(JSON.stringify({
+      type: 'steps',
+      roomId,
+      clientID: localClientID.current,
+      doc: docJson,
+      steps: pendingSteps.current
+    }))
+    pendingSteps.current = []
+  }
+
   useEffect(() => {
-    onUpdateRef.current = onUpdate
-  }, [onUpdate])
+    if (!roomId) return
 
-  useEffect(() => {
-    console.log('Document component mounted')
-    if (!editorRef.current) {
-      console.log('editorRef.current is null')
-      return
-    }
+    joinRoom(roomId)
 
-    const state = EditorState.create({
+    // Temporary initial empty state
+    let state = EditorState.create({
       schema: basicSchema,
-      plugins: [
-        history(),
-        keymap(customKeymap),
-      ],
+      plugins: [history(), keymap(customKeymap)]
     })
 
-    viewRef.current = new EditorView(editorRef.current, {
+    // Initialize editor view
+    viewRef.current = new EditorView(document.createElement('div'), {
       state,
       dispatchTransaction(tr) {
-        console.log('dispatchTransaction called, transaction:', tr)
-        if (!viewRef.current) {
-          console.log('viewRef.current is null in dispatchTransaction')
-          return
+        const view = viewRef.current!
+        const newState = view.state.apply(tr)
+        view.updateState(newState)
+
+        if (!tr.docChanged) return
+
+        if (!tr.getMeta('remote')) {
+          pendingSteps.current.push(...tr.steps.map(s => s.toJSON()))
+          requestAnimationFrame(sendPendingSteps)
         }
-        const newState = viewRef.current.state.apply(tr)
-        console.log('newState applied')
-        viewRef.current.updateState(newState)
-        const markdown = serializeNode(newState.doc)
-        console.log('markdown after transaction:', markdown)
-        onUpdateRef.current(markdown)  // ← Changed from onUpdate to onUpdateRef.current
+
+        onUpdate(serializeNode(newState.doc))
       }
     })
 
-    console.log('EditorView created')
-    const initialMarkdown = serializeNode(viewRef.current.state.doc)
-    onUpdateRef.current(initialMarkdown)  // ← Changed from onUpdate to onUpdateRef.current
+    const container = document.querySelector('.ProseMirror') || document.body
+    container.appendChild(viewRef.current.dom)
+
+    const handleMessage = (e: MessageEvent) => {
+      const msg = JSON.parse(e.data)
+
+      // --- Apply init document if joining mid-edit ---
+      if (msg.type === 'init' && msg.roomId === roomId) {
+        console.log('[Editor] INIT document received', msg.doc)
+        if (msg.doc) {
+          const doc = ProseMirrorNode.fromJSON(basicSchema, msg.doc)
+          const tr = viewRef.current!.state.tr.replaceWith(0, viewRef.current!.state.doc.content.size, doc.content)
+          viewRef.current!.dispatch(tr)
+          onUpdate(serializeNode(viewRef.current!.state.doc))
+        }
+        if (msg.version !== undefined) roomVersion.current = msg.version
+        return
+      }
+
+      // Apply steps from other clients
+      if (msg.type === 'steps' && msg.clientID !== localClientID.current && msg.roomId === roomId) {
+        const view = viewRef.current!
+        let tr = view.state.tr
+        msg.steps.forEach((stepJSON: any) => {
+          const step = Step.fromJSON(view.state.schema, stepJSON)
+          tr = tr.step(step)
+        })
+        tr.setMeta('remote', true)
+        view.dispatch(tr)
+        onUpdate(serializeNode(viewRef.current!.state.doc))
+      }
+    }
+
+    ws.addEventListener('message', handleMessage)
 
     return () => {
-      if (viewRef.current) viewRef.current.destroy()
+      viewRef.current?.destroy()
+      ws.removeEventListener('message', handleMessage)
     }
-  }, [])  // ← Changed from [onUpdate, viewRef] to []
+  }, [roomId, onUpdate, viewRef])
 
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-      <div ref={editorRef} className="ProseMirror" />
-    </div>
-  )
+  return <div className="ProseMirror" style={{ flex: 1, overflowY: 'auto', padding: 24 }} />
 }

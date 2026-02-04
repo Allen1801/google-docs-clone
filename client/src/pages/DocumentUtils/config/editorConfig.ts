@@ -16,11 +16,11 @@ const tabHandler = () => (state: any, dispatch: any) => {
 }
 
 export const customKeymap = {
-  ...baseKeymap,
   'Tab': tabHandler(),
   'Mod-z': undo,
   'Mod-y': redo,
   'Mod-Shift-z': redo,
+  ...baseKeymap,
 }
 
 export const editorStyles = `

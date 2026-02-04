@@ -68,6 +68,7 @@ export default function DocumentPage() {
         />
         
         <Editor 
+          roomId={id!}
           onUpdate={handleUpdate} 
           viewRef={viewRef} 
         />
