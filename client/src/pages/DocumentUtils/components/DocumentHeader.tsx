@@ -28,7 +28,7 @@ export default function DocumentHeader({ title, onTitleChange, documentId }: Doc
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       const msg = JSON.parse(e.data)
-      console.log('[DocumentHeader] WS message received:', msg)
+      // console.log('[DocumentHeader] WS message received:', msg)
 
       // INIT message
       if (msg.type === 'init' && msg.roomId === documentId) {

@@ -5,6 +5,7 @@ import DocumentHeader from './components/DocumentHeader'
 import Editor from './components/Editor'
 import Preview from './components/Preview'
 import ActionButtons from './components/ActionButtons'
+import UsernameModal from './components/UsernameModal'
 import { editorStyles } from './config/editorConfig'
 import { serializeNode } from './utils/serializer'
 import { downloadMarkdown } from './utils/download'
@@ -15,6 +16,15 @@ export default function DocumentPage() {
   const viewRef = useRef<EditorView | null>(null)
   const [preview, setPreview] = useState<string>('')
   const [title, setTitle] = useState('Untitled Document')
+  const [username, setUsername] = useState<string | null>(null)
+
+  // Check if username is stored in sessionStorage
+  useEffect(() => {
+    const storedUsername = sessionStorage.getItem('username')
+    if (storedUsername) {
+      setUsername(storedUsername)
+    }
+  }, [])
 
   // Inject styles on mount
   useEffect(() => {
@@ -26,6 +36,11 @@ export default function DocumentPage() {
       document.head.removeChild(styleElement)
     }
   }, [])
+
+  const handleUsernameSubmit = (name: string) => {
+    setUsername(name)
+    sessionStorage.setItem('username', name)
+  }
 
   const handleUpdate = useCallback((markdown: string) => {
     console.log('Preview state changed:', markdown)
@@ -55,6 +70,10 @@ export default function DocumentPage() {
     }
   }, [id])
 
+  // Show modal if no username
+  if (!username) {
+    return <UsernameModal onSubmit={handleUsernameSubmit} />
+  }
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'row', fontFamily: 'system-ui, Arial', overflow: 'hidden' }}>
@@ -70,7 +89,8 @@ export default function DocumentPage() {
         <Editor 
           roomId={id!}
           onUpdate={handleUpdate} 
-          viewRef={viewRef} 
+          viewRef={viewRef}
+          username={username}
         />
 
         <ActionButtons 

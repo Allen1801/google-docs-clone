@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws'
 import 'dotenv/config'
-import { getRoom } from './roomManager.js'
+import { getRoom, rooms } from './roomManager.js'  // Add rooms import
 import { MESSAGE_TYPES } from './types.js'
 
 const PORT = process.env.PORT || 1234
@@ -10,6 +10,32 @@ const wss = new WebSocketServer({
   host: '0.0.0.0'
 })
 
+// Clean up stale presence data every 30 seconds
+// MOVE THIS OUTSIDE - it should run once, not per connection
+setInterval(() => {
+  const now = Date.now()
+  const STALE_TIMEOUT = 10000 // 10 seconds
+
+  for (const [roomId, room] of rooms.entries()) {
+    for (const [clientID, presence] of room.presence.entries()) {
+      if (now - presence.lastSeen > STALE_TIMEOUT) {
+        room.presence.delete(clientID)
+        
+        // Broadcast updated presence to room
+        const users = Array.from(room.presence.values())
+        for (const client of room.clients) {
+          if (client.readyState === 1) { // Check if connection is open
+            client.send(JSON.stringify({
+              type: MESSAGE_TYPES.PRESENCE,
+              payload: users
+            }))
+          }
+        }
+      }
+    }
+  }
+}, 30000)
+
 wss.on('connection', (ws) => {
   let currentRoom = null
 
@@ -17,21 +43,20 @@ wss.on('connection', (ws) => {
     const msg = JSON.parse(raw.toString())
 
     if (msg.type === MESSAGE_TYPES.JOIN) {
-    currentRoom = msg.roomId;
-    const room = getRoom(msg.roomId);
-    room.clients.add(ws);
+      currentRoom = msg.roomId;
+      const room = getRoom(msg.roomId);
+      room.clients.add(ws);
 
-    // Send current doc directly
-    ws.send(JSON.stringify({
+      // Send current doc directly
+      ws.send(JSON.stringify({
         type: MESSAGE_TYPES.INIT,
         doc: room.doc || { type: 'doc', content: [] },
         roomId: currentRoom,
         version: room.version,
         title: room.title
-    }));
-    return;
+      }));
+      return;
     }
-
 
     if (!currentRoom) return
     const room = getRoom(currentRoom)
