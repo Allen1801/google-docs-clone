@@ -1,12 +1,12 @@
-export const ws = new WebSocket('ws://localhost:1234')
+export const wss = new WebSocket(import.meta.env.VITE_WS_URL)
 
 export function joinRoom(roomId: string) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'join', roomId }))
+  if (wss.readyState === WebSocket.OPEN) {
+    wss.send(JSON.stringify({ type: 'join', roomId }))
   } else {
-    ws.addEventListener('open', function onOpen() {
-      ws.send(JSON.stringify({ type: 'join', roomId }))
-      ws.removeEventListener('open', onOpen)
+    wss.addEventListener('open', function onOpen() {
+      wss.send(JSON.stringify({ type: 'join', roomId }))
+      wss.removeEventListener('open', onOpen)
     })
   }
 }

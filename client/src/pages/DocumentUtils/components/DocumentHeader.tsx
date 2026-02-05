@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ws, joinRoom } from '../../../websocket/socket'
+import { wss, joinRoom } from '../../../websocket/socket'
 
 interface DocumentHeaderProps {
   title: string
@@ -46,8 +46,8 @@ export default function DocumentHeader({ title, onTitleChange, documentId }: Doc
       }
     }
 
-    ws.addEventListener('message', handleMessage)
-    return () => ws.removeEventListener('message', handleMessage)
+    wss.addEventListener('message', handleMessage)
+    return () => wss.removeEventListener('message', handleMessage)
   }, [documentId, onTitleChange])
 
   // Handle local input changes
@@ -60,7 +60,7 @@ export default function DocumentHeader({ title, onTitleChange, documentId }: Doc
     if (!documentId) return
 
     console.log('[DocumentHeader] Sending TITLE update:', newTitle)
-    ws.send(JSON.stringify({
+    wss.send(JSON.stringify({
       type: 'title',
       roomId: documentId,
       clientID: localClientID.current,

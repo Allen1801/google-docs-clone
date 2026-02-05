@@ -8,7 +8,7 @@ import { Node as ProseMirrorNode } from 'prosemirror-model'
 import { Step } from 'prosemirror-transform'
 import { customKeymap } from '../config/editorConfig'
 import { serializeNode } from '../utils/serializer'
-import { ws, joinRoom } from '../../../websocket/socket'
+import { wss, joinRoom } from '../../../websocket/socket'
 
 interface EditorProps {
   roomId: string
@@ -24,7 +24,7 @@ export default function Editor({ roomId, onUpdate, viewRef }: EditorProps) {
   const sendPendingSteps = () => {
     if (!pendingSteps.current.length) return
     const docJson = viewRef.current!.state.doc.toJSON()
-    ws.send(JSON.stringify({
+    wss.send(JSON.stringify({
       type: 'steps',
       roomId,
       clientID: localClientID.current,
@@ -97,11 +97,11 @@ export default function Editor({ roomId, onUpdate, viewRef }: EditorProps) {
       }
     }
 
-    ws.addEventListener('message', handleMessage)
+    wss.addEventListener('message', handleMessage)
 
     return () => {
       viewRef.current?.destroy()
-      ws.removeEventListener('message', handleMessage)
+      wss.removeEventListener('message', handleMessage)
     }
   }, [roomId, onUpdate, viewRef])
 
