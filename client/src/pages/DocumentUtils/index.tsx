@@ -45,7 +45,7 @@ export default function DocumentPage() {
   const handleShare = useCallback(async () => {
     if (!id) return
 
-    const shareLink = `${window.location.origin}/document/${id}`
+    const shareLink = `${window.location.origin}/doc/${id}`
 
     try {
       await navigator.clipboard.writeText(shareLink)
