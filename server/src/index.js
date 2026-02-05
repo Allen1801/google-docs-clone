@@ -1,8 +1,14 @@
 import { WebSocketServer } from 'ws'
+import 'dotenv/config'
 import { getRoom } from './roomManager.js'
 import { MESSAGE_TYPES } from './types.js'
 
-const wss = new WebSocketServer({ port: 1234 })
+const PORT = process.env.PORT || 1234
+
+const wss = new WebSocketServer({ 
+  port: PORT, 
+  host: '0.0.0.0'
+})
 
 wss.on('connection', (ws) => {
   let currentRoom = null
@@ -75,4 +81,4 @@ wss.on('connection', (ws) => {
   })
 })
 
-console.log('✅ WS server running at ws://localhost:1234')
+console.log('✅ WS server running at port', PORT)
