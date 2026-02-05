@@ -4,9 +4,16 @@ interface ActionButtonsProps {
   onShare: () => void
 }
 
+const palette = {
+  primary: '#2563eb', // blue
+  secondary: '#4b5563', // gray
+  light: '#f3f4f6', // light gray
+  textLight: '#ffffff',
+}
+
 export default function ActionButtons({ onBackHome, onDownload, onShare }: ActionButtonsProps) {
   return (
-    <div style={{ display: 'flex', borderTop: '1px solid #e0e0e0', flexShrink: 0 }}>
+    <div style={{ display: 'flex', borderTop: `1px solid ${palette.light}`, flexShrink: 0 }}>
       <button 
         onClick={onBackHome} 
         style={{ 
@@ -14,13 +21,15 @@ export default function ActionButtons({ onBackHome, onDownload, onShare }: Actio
           padding: '12px 24px', 
           cursor: 'pointer', 
           border: 'none', 
-          background: '#f5f5f5',
+          background: palette.light,
+          color: palette.secondary,
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: 500,
         }}
       >
         Back Home
       </button>
+
       <button 
         onClick={onDownload} 
         style={{ 
@@ -28,26 +37,26 @@ export default function ActionButtons({ onBackHome, onDownload, onShare }: Actio
           padding: '12px 24px', 
           cursor: 'pointer', 
           border: 'none', 
-          background: '#007bff', 
-          color: 'white',
+          background: palette.primary, 
+          color: palette.textLight,
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: 500,
         }}
       >
         Download as MD
       </button>
 
-    <button
+      <button
         onClick={onShare}
         style={{
           flex: 1,
           padding: '12px 24px',
           cursor: 'pointer',
           border: 'none',
-          background: '#6c757d',
-          color: 'white',
+          background: palette.secondary,
+          color: palette.textLight,
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: 500,
         }}
       >
         Share Document

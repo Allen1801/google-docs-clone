@@ -26,14 +26,31 @@ export default function App() {
       <Route
         path="/"
         element={
-          <div className="app-home" style={{ padding: 24, fontFamily: 'system-ui, Arial' }}>
+          <div
+            className="app-home"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh', // full viewport height
+              fontFamily: 'system-ui, Arial',
+              textAlign: 'center',
+              padding: 24,
+            }}
+          >
             <header>
-              <h1 style={{ margin: 0 }}>Docs Clone</h1>
-              <p style={{ color: '#555', marginTop: 6 }}>Collaborative editor (ProseMirror + Yjs) — demo home</p>
+              <h1 style={{ margin: 0 }}>Collaborative Markdown</h1>
+              <p style={{ color: '#555', marginTop: 6 }}>
+                Docs Clone that enables collaborative work for markdown documents.
+              </p>
             </header>
 
             <main style={{ marginTop: 24 }}>
-              <button onClick={createNewDocument} style={{ padding: '10px 16px', fontSize: 16 }}>
+              <button
+                onClick={createNewDocument}
+                style={{ padding: '10px 16px', fontSize: 16 }}
+              >
                 New Document
               </button>
             </main>
@@ -44,3 +61,4 @@ export default function App() {
     </Routes>
   )
 }
+
