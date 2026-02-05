@@ -316,7 +316,7 @@ export default function Editor({
         <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
           {/* Show local user first */}
           <div
-            title={`${username} (you)`}  // This already has tooltip
+            title={`${username} (you)`}
             style={{
               width: '28px',
               height: '28px',
@@ -329,8 +329,7 @@ export default function Editor({
               fontSize: '12px',
               fontWeight: 'bold',
               border: '2px solid white',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              cursor: 'pointer'  // Add cursor pointer to show it's hoverable
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
             }}
           >
             {username[0].toUpperCase()}
@@ -340,7 +339,7 @@ export default function Editor({
           {activeUsers.map(user => (
             <div
               key={user.clientID}
-              title={user.username}  // This already has tooltip
+              title={user.username}
               style={{
                 width: '28px',
                 height: '28px',
@@ -353,8 +352,7 @@ export default function Editor({
                 fontSize: '12px',
                 fontWeight: 'bold',
                 border: '2px solid white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                cursor: 'pointer'  // Add cursor pointer to show it's hoverable
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
               }}
             >
               {user.username[0].toUpperCase()}
